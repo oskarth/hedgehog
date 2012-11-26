@@ -25354,23 +25354,28 @@ hedgehog.main.log = function() {
     return log__delegate.call(this, args)
   };
   log.cljs$lang$maxFixedArity = 0;
-  log.cljs$lang$applyTo = function(arglist__6808) {
-    var args = cljs.core.seq(arglist__6808);
+  log.cljs$lang$applyTo = function(arglist__111858) {
+    var args = cljs.core.seq(arglist__111858);
     return log__delegate(args)
   };
   log.cljs$lang$arity$variadic = log__delegate;
   return log
 }();
 hedgehog.main.todos = cljs.core.atom.call(null, cljs.core.PersistentVector.fromArray(["buy milk", "eat lunch", "drink milk"], true));
+hedgehog.main.add_todo = function add_todo(todo) {
+  return cljs.core.swap_BANG_.call(null, hedgehog.main.todos, cljs.core.conj, todo)
+};
+hedgehog.main.remove_todo = function remove_todo(idx) {
+  return null
+};
 hedgehog.main.todo_element = function todo_element(todo) {
   return cljs.core.PersistentVector.fromArray(["\ufdd0'li.todo", todo], true)
 };
 hedgehog.main.render = function render(todos) {
-  return crate.core.html.call(null, cljs.core.PersistentVector.fromArray(["\ufdd0'body", cljs.core.apply.call(null, cljs.core.partial.call(null, cljs.core.conj, cljs.core.PersistentVector.fromArray(["\ufdd0'ul#todos"], true)), cljs.core.map.call(null, hedgehog.main.todo_element, todos))], true))
+  return clojure.browser.dom.replace_node.call(null, clojure.browser.dom.get_element.call(null, "todos"), crate.core.html.call(null, cljs.core.apply.call(null, cljs.core.partial.call(null, cljs.core.conj, cljs.core.PersistentVector.fromArray(["\ufdd0'ul#todos"], true)), cljs.core.map.call(null, hedgehog.main.todo_element, todos))))
 };
 cljs.core.add_watch.call(null, hedgehog.main.todos, null, function(key, a, old_val, new_val) {
   return hedgehog.main.render.call(null, new_val)
 });
-hedgehog.main.render.call(null, cljs.core.deref.call(null, hedgehog.main.todos));
-cljs.core.swap_BANG_.call(null, hedgehog.main.todos, cljs.core.conj, "foo");
-clojure.browser.dom.append.call(null, document.body, hedgehog.main.render.call(null, cljs.core.deref.call(null, hedgehog.main.todos)));
+hedgehog.main.add_todo.call(null, "foo");
+hedgehog.main.add_todo.call(null, "bar");
