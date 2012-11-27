@@ -8,11 +8,17 @@
 (def dom-state (atom {:focus nil}))
 
 (defn render [template new-val]
-  (dom/replace-node
-    (dom/get-element "content")
-    (crate/html
+  (let [focus (:focus @dom-state)]
+    (dom/log "MY FOCUS MY FOCUS WHAT HAVE YE DONE WITH MY FOCUS?")
+    (dom/log focus)
+    (dom/replace-node
+     (dom/get-element "content")
+     (crate/html
       [:div#content
-        (template new-val)])))
+       (template new-val)]))
+    (dom/log "MY FOCUS HERE? " focus)
+    (when focus
+      (. focus focus))))
 
 (defn init [template state]
   (dom/insert-at
@@ -40,3 +46,24 @@
 
 (event/listen body :focus focus-event true)
 (event/listen body :blur blur-event true)
+
+;; selectors
+(defn get-element-index
+  "gets index of element in relation to its siblings"
+  [el]
+  (let [siblings (js->clj (js/Array.prototype.slice.call
+                           (-> el .-parentNode .-childNodes)))]
+    (count (take-while (partial not= el) siblings))))
+                    
+(defn get-element-path
+  "get xpath of a dom element"
+  [el]
+  (let [parent (.-parentNode el)
+        tagname (.-tagName el)]
+  (cond
+   (not= (.-id el) "") (str "id(\"" (.-id el) "\")")
+   (= el (.-body js/document)) tagname
+   :else
+   (str (get-element-path parent)
+        "/" tagname
+        "[" (get-element-index el) "]"))))
