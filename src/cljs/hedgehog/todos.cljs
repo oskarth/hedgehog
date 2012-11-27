@@ -34,7 +34,6 @@
   "too specific"
   [ev]
   (let [val (-> ev .-target .-value)]
-    (swap! state assoc :pending-todo val)
-    (dom/log @state)))
+    (swap! state assoc :pending-todo val)))
 
 (event/listen hedgehog/body :input input-event true)
