@@ -3,6 +3,8 @@
             [clojure.browser.dom :as dom]
             [crate.core :as crate]))
 
+;;(def dom (atom {}))
+
 (defn render [template new-val]
   (dom/replace-node
     (dom/get-element "content")
