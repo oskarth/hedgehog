@@ -2,7 +2,10 @@
   (:require
    [clojure.browser.dom :as dom]
    [clojure.browser.event :as event]
+   ;;[goog.dom.SavedCaretRange :as gscr]
    [hedgehog.core :as hedgehog]))
+
+;;(def saved-caret-range (goog.dom.SavedCaretRange.))
 
 ;; inital data state
 (def state (atom
@@ -27,14 +30,11 @@
 ;; should init an app, which uses some templates
 (hedgehog/init todos state)
 
-(defn input-event [ev]
+(defn input-event
+  "too specific"
+  [ev]
   (let [val (-> ev .-target .-value)]
     (swap! state assoc :pending-todo val)
     (dom/log @state)))
-  
-(event/listen (.-body js/document)
-              "input"
-              input-event)
 
-;; event-map => event/listen
-#_{:content [:click foo-fn todos]}
+(event/listen hedgehog/body :input input-event true)

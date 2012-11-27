@@ -3,7 +3,9 @@
             [clojure.browser.dom :as dom]
             [crate.core :as crate]))
 
-;;(def dom (atom {}))
+(def body (.-body js/document))
+
+(def dom-state (atom {:focus nil}))
 
 (defn render [template new-val]
   (dom/replace-node
@@ -21,3 +23,20 @@
     (fn [k a old-val new-val]
       (render template new-val)))
   (render template @state))
+
+;; event handlers?
+(defn focus-event
+  "saves focused dom element in dom-state atom"
+  [ev]
+  (let [target (-> ev .-target)]
+    (swap! dom-state assoc :focus target)
+    (dom/log @dom-state)))
+
+(defn blur-event
+  "remove previously focused dom element from dom-state atom"
+  [ev]
+  (swap! dom-state assoc :focus nil)
+  (dom/log @dom-state))
+
+(event/listen body :focus focus-event true)
+(event/listen body :blur blur-event true)
