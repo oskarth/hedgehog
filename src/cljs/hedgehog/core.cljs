@@ -1,11 +1,11 @@
 (ns hedgehog.core
   (:require [clojure.browser.event :as event]
             [clojure.browser.dom :as dom]
+            [goog.dom :as gdom]
             [crate.core :as crate]))
 
 (def document js/document)
 (def window js/window)
-
 (defn body [] (.-body document))
 
 (def dom-state (atom
@@ -32,7 +32,7 @@
         tagname (.-tagName el)]
   (cond
    (not= (.-id el) "") (str "id(\"" (.-id el) "\")")
-   (= el body) tagname
+   (= el (body)) tagname
    :else
      (str (get-element-path parent)
           "/" tagname
@@ -82,8 +82,9 @@
 (defn- update-dom!
   ""
   [template curr-state]
-  (dom/replace-node (.-body document)
-   (crate/html [:body (template curr-state)])))
+  (gdom/removeChildren (body))
+  (dom/insert-at (body)
+   (crate/html [:body (template curr-state)]) 0))
 
 (defn- post-render!
   ""
@@ -109,6 +110,5 @@
 (defn init!
   "inits template with a given state"
   [template title state]
-  ;; callback function, waits for dom-ready
-  (dom-ready! #((make-watcher! template title state)
-                (render! template title @state))))
+  (make-watcher! template title state)
+  (render! template title @state))

@@ -23,14 +23,14 @@
     [:ul (map todo-element (:todos state))]
     [:input#input
       {:value (:pending-todo state)
-       :type "text"}]
+       :type "text"
+       :autofocus "true"}]
    [:button "Add" (comment {:mouse-event add-todo!})]
    [:span (:pending-todo state)]])
 
-(defn title [state] (:pending-todo state))
-
-;; should init an app, which uses some templates
-(hedgehog/init! todos title state)
+(defn title [state]
+  (let [n (count (:todos state))]
+    (str "Todos" (when-not (zero? n) (str " (" n ")")))))
 
 (defn input-event
   "too specific"
@@ -39,4 +39,6 @@
     (swap! state assoc :pending-todo val)))
 
 (hedgehog/dom-ready!
- (fn [] (event/listen (hedgehog/body) :input input-event true)))
+ (fn []
+  (hedgehog/init! todos title state)
+  (event/listen (hedgehog/body) :input input-event true)))
