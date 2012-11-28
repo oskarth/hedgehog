@@ -27,8 +27,10 @@
    [:button "Add" (comment {:mouse-event add-todo!})]
    [:span (:pending-todo state)]])
 
+(defn title [state] (:pending-todo state))
+
 ;; should init an app, which uses some templates
-(hedgehog/init todos state)
+(hedgehog/init! todos title state)
 
 (defn input-event
   "too specific"
