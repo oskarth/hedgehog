@@ -3,16 +3,14 @@
             [clojure.browser.dom :as dom]
             [crate.core :as crate]))
 
-
 (def document js/document)
 (def body (.-body document))
 
-;; TODO: name make sense?
 (def dom-state (atom
   {:focus nil
    :selection nil}))
 
-;; selectors
+;; dom helpers
 
 (defn get-element-index
   "gets index of element in relation to its siblings"
@@ -35,18 +33,15 @@
           "[" (get-element-index el) "]"))))
 
 (defn get-element
+  ""
   [xpath]
   (.iterateNext
     (.evaluate document xpath document nil js/XPathResult.ANY_TYPE nil)))
 
-;; dom ranges/selections
-
 (defn get-selection
   "returns [start end dir] vector representing element selection"
   [el]
-  [(.-selectionStart el)
-   (.-selectionEnd el)
-   (.-selectionDirection el)])
+  [(.-selectionStart el) (.-selectionEnd el) (.-selectionDirection el)])
 
 (defn set-selection!
   "restores selection using vector from get-selection"
@@ -54,10 +49,8 @@
   (let [[start end dir] selection]
     (.setSelectionRange el start end dir)))
 
-
-;; core
-
 (defn restore-focus!
+  ""
   [{:keys [focus selection] :as curr-dom-state}]
   (when-let [focus-el (get-element focus)]
     (.focus focus-el)
@@ -68,45 +61,54 @@
 (defn set-title! [title]
   (set! (.-title document) title))
 
-(defn render! [template title curr-state]
+;; render funcctions
+
+(defn pre-render!
+  ""
+  []
+  (let [active-el (.-activeElement document)]
+    (swap! dom-state assoc
+           :focus (get-element-path active-el)
+           :selection (get-selection active-el))))
+
+(defn update-dom!
+  ""
+  [template curr-state]
+  (dom/replace-node
+   (dom/get-element "content")
+   (crate/html
+    [:div#content
+     (template curr-state)])))
+
+(defn post-render!
+  ""
+  []
   (let [curr-dom-state @dom-state]
-    ;; replace root 'content' node with new template
-    (dom/replace-node
-     (dom/get-element "content")
-     (crate/html
-      [:div#content
-       (template curr-state)]))
-    ;; replace title using title fn defined init
-    (set-title! (title curr-state))
-    ;; restore focus to previously focused element
     (restore-focus! curr-dom-state)))
 
-(defn init! [template title state]
-  (dom/insert-at
-    body
-    (dom/element :div {:id "content"})
-    0)
+(defn render!
+  ""
+  [template title curr-state]
+  (pre-render!)
+  (update-dom! template curr-state)
+  (set-title! (title curr-state))
+  (post-render!))
+
+(defn dom-init!
+  ""
+  []
+  (dom/insert-at body (dom/element :div {:id "content"}) 0))
+
+(defn make-watcher!
+  "creates a watcher for application state"
+  [template title state]
   (add-watch state nil
-    (fn [k a old-val new-val]
-      (render! template title new-val)))
+             (fn [k a old-val new-val]
+               (js/setTimeout #(render! template title new-val) 0))))
+
+(defn init!
+  "inits template with a given state"
+  [template title state]
+  (dom-init!)
+  (make-watcher! template title state)
   (render! template title @state))
-
-;; event handlers?
-
-(defn focus-event!
-  "saves focused dom element in dom-state atom"
-  [ev]
-  (let [target (.-target ev)]
-    (swap! dom-state assoc
-      :focus (get-element-path target)
-      :selection (get-selection target))))
-
-(defn blur-event!
-  "remove previously focused dom element from dom-state atom"
-  [ev]
-  (swap! dom-state assoc
-    :focus nil
-    :selection nil))
-
-(event/listen body :focus focus-event! true)
-(event/listen body :blur blur-event! true)
