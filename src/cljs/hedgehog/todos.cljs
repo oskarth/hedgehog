@@ -28,6 +28,11 @@
 (defco title
   (str "Todos" (when-not (zero? @num-todos) (str " (" @num-todos ")"))))
 
+;; traverse this form
+;; predicate for @form
+;; when hitting @form, make a map that
+;; defines which html el (xpath?) binds to that form
+
 (defco body
   [:div#todos
     [:ul

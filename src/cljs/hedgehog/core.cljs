@@ -12,6 +12,11 @@
   {:focus nil
    :selection nil}))
 
+(def rerender? (atom true))
+
+(defn toggle-rerender []
+  (reset! rerender? (not @rerender?)))
+
 ;; dom helpers
 ;;----------------------------------------------------------------------------
 
@@ -81,7 +86,8 @@
 (defn- update-dom!
   ""
   [body]
-  (gdom/removeChildren (body-el))
+  (when @rerender?
+    (gdom/removeChildren (body-el)))
   (dom/insert-at (body-el)
    (crate/html [:body @body]) 0))
 
