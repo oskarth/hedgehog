@@ -9,5 +9,4 @@
 (defmacro defco
   "defined computed observables"
   [name expr]
-  `(let [co# (computed-observable ~expr)]
-     `(def ~name co#)))
+  `(def ~name (computed-observable ~expr)))

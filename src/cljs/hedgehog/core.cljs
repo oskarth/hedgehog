@@ -65,7 +65,6 @@
   (when-let [focus-el (get-element focus)]
     (.focus focus-el)
     (when selection
-      (dom/log selection)
       (set-selection! focus-el selection))))
 
 (defn- set-title! [title]

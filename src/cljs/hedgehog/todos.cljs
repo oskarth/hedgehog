@@ -17,23 +17,21 @@
 (defco state {:todos @todos
               :pending-todo @pending-todo})
 
-;; CO example: (computed-observable (if @a @b @c))
-
 (defn add-todo! [todo]
-  (swap! state update-in [:todos] conj todo))
+  (swap! todos conj todo))
 
 (defn todo-element [todo]
   [:li.todo todo])
 
-(defn todos [state]
+(defn template [state]
   [:div#todos
-    [:ul (map todo-element (:todos state))]
+    [:ul (map todo-element @todos)]
     [:input#input
-      {:value (:pending-todo state)
+      {:value @pending-todo
        :type "text"
        :autofocus "true"}]
    [:button "Add" (comment {:mouse-event add-todo!})]
-   [:span (:pending-todo state)]])
+   [:span @pending-todo]])
 
 (defn title [state]
   (str "Todos" (when-not (zero? @num-todos) (str " (" @num-todos ")"))))
@@ -42,9 +40,9 @@
   "too specific"
   [ev]
   (let [val (-> ev .-target .-value)]
-    (swap! state assoc :pending-todo val)))
+    (reset! pending-todo val)))
 
 (hedgehog/dom-ready!
  (fn []
-  (hedgehog/init! todos title state)
+  (hedgehog/init! template title state)
   (event/listen (hedgehog/body) :input input-event true)))
