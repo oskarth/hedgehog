@@ -68,7 +68,7 @@
       (set-selection! focus-el selection))))
 
 (defn- set-title! [title]
-  (set! (.-title document) title))
+  (set! (.-title document) @title))
 
 (defn- pre-render!
   ""
@@ -80,10 +80,10 @@
 
 (defn- update-dom!
   ""
-  [template curr-state]
+  [template]
   (gdom/removeChildren (body))
   (dom/insert-at (body)
-   (crate/html [:body (template curr-state)]) 0))
+   (crate/html [:body @template]) 0))
 
 (defn- post-render!
   ""
@@ -93,21 +93,20 @@
 
 (defn- render!
   ""
-  [template title curr-state]
+  [template title]
   (pre-render!)
-  (update-dom! template curr-state)
-  (set-title! (title curr-state))
+  (update-dom! template)
+  (set-title! title)
   (post-render!))
 
 (defn- make-watcher!
   "creates a watcher for application state"
-  [template title state]
-  (add-watch state nil
+  [template title]
+  (add-watch template nil
              (fn [k a old-val new-val]
-               (js/setTimeout #(render! template title new-val) 0))))
+               (js/setTimeout #(render! template title) 0))))
 
 (defn init!
-  "inits template with a given state"
-  [template title state]
-  (make-watcher! template title state)
-  (render! template title @state))
+  [template title]
+  (make-watcher! template title)
+  (render! template title))

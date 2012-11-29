@@ -1,48 +1,54 @@
 (ns hedgehog.todos
-  (:use-macros
-   ;;[reflex.macros :only [computed-observable constrain!]]
-   [hedgehog.macros :only [defo defco]])
+  (:use-macros [hedgehog.macros :only [defo defco]])
   (:require
    [clojure.browser.dom :as dom]
    [clojure.browser.event :as event]
    [reflex.core :as reflex]
    [hedgehog.core :as hedgehog]))
 
+; defo/defe input-event xpath AND THEN when  this changes
+; STATE PROPAGATE. defco
+
+;; why do things have to change?
+;; 1) core data changes (external)
+;; 2) user interaction, ie events! (internal)
+
+;; dom as a CO
+;; whenever event happens, something should happen in dom/CO
+
 (defo todos ["buy milk" "eat lunch" "drink milk"])
 (defo pending-todo "foo bar")
-
 (defco first-todo (first @todos))
 (defco num-todos (count @todos))
 
-(defco state {:todos @todos
-              :pending-todo @pending-todo})
+(defn add-todo! [todo] (swap! todos conj todo))
 
-(defn add-todo! [todo]
-  (swap! todos conj todo))
+(defn todo-element [todo] [:li.todo todo])
 
-(defn todo-element [todo]
-  [:li.todo todo])
-
-(defn template [state]
+(defco template
   [:div#todos
-    [:ul (map todo-element @todos)]
+    [:ul
+      (map todo-element @todos)
+      (when-not (empty? @pending-todo)
+        (todo-element @pending-todo))]
     [:input#input
       {:value @pending-todo
        :type "text"
        :autofocus "true"}]
-   [:button "Add" (comment {:mouse-event add-todo!})]
-   [:span @pending-todo]])
+   [:input {:value @pending-todo}]
+   [:button "Add"]])
 
-(defn title [state]
+(defco title
   (str "Todos" (when-not (zero? @num-todos) (str " (" @num-todos ")"))))
 
+;; TODO: pwn this
 (defn input-event
   "too specific"
   [ev]
   (let [val (-> ev .-target .-value)]
-    (reset! pending-todo val)))
+    (reset! pending-todo val))) 
 
-(hedgehog/dom-ready!
+(hedgehog/dom-ready! ;; and this
  (fn []
-  (hedgehog/init! template title state)
+  (hedgehog/init! template title)
   (event/listen (hedgehog/body) :input input-event true)))
