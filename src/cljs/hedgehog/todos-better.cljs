@@ -1,6 +1,6 @@
 (ns hedgehog.todos
-  (:use-macros [hedgehog.macros :only [defstate defevents defpartial]])
-  (:require [hedgehog.core :as hedgehog]))
+  (:use-macros [hedgehog.macros :only [defco defstate defevents defpartial]])
+  (:require [hedgehog.core :as hh]))
 
 ;; application state
 (defstate
@@ -8,28 +8,27 @@
    :pending {:todo "foo bar"}})
 
 ;; COs based on data state
-(defco :first-todo (nth (get :todos) 0))
+(defco :first-todo (first (hh/get :todos)))
+(defco :num-todos (count (hh/get :todos)))
 
 ;; application logic
 (defn add-pending-todo! []
-  (add! :todos (get :todo :pending))
-  (clear! :todo :pending))
+  (hh/add! :todos (get :todo :pending))
+  (hh/clear! :todo :pending))
 
 ;; html templates
 (defn todo-element [todo]
   [:li.todo todo])
 
-Modif. [our todos] => li and input box
-
 (defpartial todos
-  [:title (bind! :pending-todo)]
+  [:title (hh/bind! :pending-todo)]
   [:div#todos
-     [:h1 (str "Todos (" (bind! :num-todos) ")")]
+     [:h1 (str "Todos (" (hh/bind! :num-todos) ")")]
      [:ul (map todo-element :todos)
       [:input#input
        {:value (bind! :todo :pending) :type "text"}]
       [:button "Add"
        {:click add-pending-todo!}]
-      [:span (bind! :todo :pending)]]])
+      [:span (hh/bind! :todo :pending)]]])
 
-(init! todos)
+(hh/init! todos)
