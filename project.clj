@@ -9,6 +9,7 @@
                  [org.clojure/clojurescript "0.0-1450"]
                  [compojure "1.1.0"]
                  [ring/ring-jetty-adapter "1.1.1"]
+                 [com.keminglabs/reflex "0.1.1"]
                  [crate "0.2.1"]]
   :ring {:handler hedgehog.core/handler}
   :source-paths ["src/clj"]

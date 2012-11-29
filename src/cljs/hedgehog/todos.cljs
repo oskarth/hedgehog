@@ -1,16 +1,23 @@
 (ns hedgehog.todos
+  (:use-macros
+   ;;[reflex.macros :only [computed-observable constrain!]]
+   [hedgehog.macros :only [defo defco]])
   (:require
    [clojure.browser.dom :as dom]
    [clojure.browser.event :as event]
-   ;;[goog.dom.SavedCaretRange :as gscr]
+   [reflex.core :as reflex]
    [hedgehog.core :as hedgehog]))
 
-;;(def saved-caret-range (goog.dom.SavedCaretRange.))
+(defo todos ["buy milk" "eat lunch" "drink milk"])
+(defo pending-todo "foo bar")
 
-;; inital data state
-(def state (atom
-            {:todos ["buy milk" "eat lunch" "drink milk"]
-             :pending-todo "foo bar"}))
+(defco first-todo (first @todos))
+(defco num-todos (count @todos))
+
+(defco state {:todos @todos
+              :pending-todo @pending-todo})
+
+;; CO example: (computed-observable (if @a @b @c))
 
 (defn add-todo! [todo]
   (swap! state update-in [:todos] conj todo))
@@ -29,8 +36,7 @@
    [:span (:pending-todo state)]])
 
 (defn title [state]
-  (let [n (count (:todos state))]
-    (str "Todos" (when-not (zero? n) (str " (" n ")")))))
+  (str "Todos" (when-not (zero? @num-todos) (str " (" @num-todos ")"))))
 
 (defn input-event
   "too specific"
