@@ -6,7 +6,7 @@
 
 (def document js/document)
 (def window js/window)
-(defn body [] (.-body document))
+(defn body-el [] (.-body document))
 
 (def dom-state (atom
   {:focus nil
@@ -32,7 +32,7 @@
         tagname (.-tagName el)]
   (cond
    (not= (.-id el) "") (str "id(\"" (.-id el) "\")")
-   (= el (body)) tagname
+   (= el (body-el)) tagname
    :else
      (str (get-element-path parent)
           "/" tagname
@@ -80,10 +80,10 @@
 
 (defn- update-dom!
   ""
-  [template]
-  (gdom/removeChildren (body))
-  (dom/insert-at (body)
-   (crate/html [:body @template]) 0))
+  [body]
+  (gdom/removeChildren (body-el))
+  (dom/insert-at (body-el)
+   (crate/html [:body @body]) 0))
 
 (defn- post-render!
   ""
@@ -93,20 +93,20 @@
 
 (defn- render!
   ""
-  [template title]
+  [title body]
   (pre-render!)
-  (update-dom! template)
   (set-title! title)
+  (update-dom! body)
   (post-render!))
 
 (defn- make-watcher!
   "creates a watcher for application state"
-  [template title]
-  (add-watch template nil
+  [title body]
+  (add-watch body nil
              (fn [k a old-val new-val]
-               (js/setTimeout #(render! template title) 0))))
+               (js/setTimeout #(render! title body) 0))))
 
 (defn init!
-  [template title]
-  (make-watcher! template title)
-  (render! template title))
+  [title body]
+  (make-watcher! title body)
+  (render! title body))

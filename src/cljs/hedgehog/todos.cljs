@@ -25,7 +25,10 @@
 
 (defn todo-element [todo] [:li.todo todo])
 
-(defco template
+(defco title
+  (str "Todos" (when-not (zero? @num-todos) (str " (" @num-todos ")"))))
+
+(defco body
   [:div#todos
     [:ul
       (map todo-element @todos)
@@ -38,9 +41,6 @@
    [:input {:value @pending-todo}]
    [:button "Add"]])
 
-(defco title
-  (str "Todos" (when-not (zero? @num-todos) (str " (" @num-todos ")"))))
-
 ;; TODO: pwn this
 (defn input-event
   "too specific"
@@ -50,5 +50,5 @@
 
 (hedgehog/dom-ready! ;; and this
  (fn []
-  (hedgehog/init! template title)
-  (event/listen (hedgehog/body) :input input-event true)))
+  (hedgehog/init! title body)
+  (event/listen (hedgehog/body-el) :input input-event true)))
