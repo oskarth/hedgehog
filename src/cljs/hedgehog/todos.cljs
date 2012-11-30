@@ -46,14 +46,7 @@
    [:input {:value @pending-todo}]
    [:button "Add"]])
 
-;; TODO: pwn this
-(defn input-event
-  "too specific"
-  [ev]
-  (let [val (-> ev .-target .-value)]
-    (reset! pending-todo val))) 
+(def render-map
+  {:input pending-todo})
 
-(hedgehog/dom-ready! ;; and this
- (fn []
-  (hedgehog/init! title body)
-  (event/listen (hedgehog/body-el) :input input-event true)))
+(hedgehog/init! title body render-map)

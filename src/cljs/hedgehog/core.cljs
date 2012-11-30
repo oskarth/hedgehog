@@ -60,6 +60,17 @@
   (let [[start end dir] selection]
     (.setSelectionRange el start end dir)))
 
+;; event handlers
+;;----------------------------------------------------------------------------
+
+; (defn handle-input
+;   [ev]
+;   (let [target (.-target ev)
+;         id (.getAttribute target "id")
+;         obs ((keyword id) render-map)
+;         val (.-value target)]
+;     (when obs (reset! obs val))))
+
 
 ;; render
 ;;----------------------------------------------------------------------------
@@ -112,7 +123,22 @@
              (fn [k a old-val new-val]
                (js/setTimeout #(render! title body) 0))))
 
+(defn- listen!
+  "sets up top level event handlers"
+  [render-map]
+  (event/listen (body-el) :input 
+    (fn [ev]
+      (let [target (.-target ev)
+            id (.getAttribute target "id")
+            obs ((keyword id) render-map)
+            val (.-value target)]
+        (when obs (reset! obs val))))
+    true))
+
 (defn init!
-  [title body]
-  (make-watcher! title body)
-  (render! title body))
+  [title body render-map]
+  (dom-ready!
+    (fn []
+      (make-watcher! title body)
+      (listen! render-map)
+      (render! title body))))
