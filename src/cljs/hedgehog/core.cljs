@@ -1,12 +1,19 @@
 (ns hedgehog.core
   (:require [clojure.browser.event :as event]
             [clojure.browser.dom :as dom]
+            [clojure.walk :as walk]
             [goog.dom :as gdom]
             [crate.core :as crate]))
 
 (def document js/document)
 (def window js/window)
 (defn body-el [] (.-body document))
+
+(def id (atom 0))
+(def event-map (atom {}))
+
+;; Taken from Hiccup: http://git.io/65Rf3g
+(def re-tag #"([^\s\.#]+)(?:#([^\s\.#]+))?(?:\.([^\s#]+))?")
 
 (def dom-state (atom
   {:focus nil
@@ -17,8 +24,48 @@
 (defn toggle-rerender []
   (reset! rerender? (not @rerender?)))
 
+;; event binding and traversing
+;;--------------------------------------------------------------------
+
+(defn- eval-to-map? [form]
+  (and (fn? form) (map? (form))))
+
+(defn- elem-with-attr? [form]
+  (and (vector? form)
+       (keyword? (first form))
+       (or (map? (second form))
+           (eval-to-map? (second form)))))
+
+;; TODO: generalize and check if function
+(defn- bind-val? [form]
+  (and (elem-with-attr? form)
+       (:bind-value (second form))))
+
+(defn- tag-id [[tag & _]]
+  "returns tag id or nil of form"
+  (nth (re-matches re-tag (name tag)) 2))
+  
+(defn- bind-value!
+  "updates event-map with a unique id and fn,
+   and returns the form with updated attribute map"
+  [form]
+  (let [id (or (tag-id form) (swap! id inc))
+        kwid (keyword (str id))
+        fn (:bind-value (second form))]
+    ;; update event-map
+    (swap! event-map assoc kwid fn)
+    ;; insert id into attr map in form
+    (assoc-in form [1 :id] id)))
+
+(defn walk-body [form]
+  (walk/postwalk
+   (fn [f]
+     (if (bind-val? f)
+       (bind-value! f)
+       f)) form))
+
 ;; dom helpers
-;;----------------------------------------------------------------------------
+;;--------------------------------------------------------------------
 
 (defn dom-ready! [f]
   (set! (.-onload window) f))
@@ -61,7 +108,7 @@
     (.setSelectionRange el start end dir)))
 
 ;; event handlers
-;;----------------------------------------------------------------------------
+;;--------------------------------------------------------------------
 
 ; (defn handle-input
 ;   [ev]
@@ -73,7 +120,7 @@
 
 
 ;; render
-;;----------------------------------------------------------------------------
+;;--------------------------------------------------------------------
 
 (defn- restore-focus!
   ""
@@ -100,7 +147,7 @@
   (when @rerender?
     (gdom/removeChildren (body-el)))
   (dom/insert-at (body-el)
-   (crate/html [:body @body]) 0))
+   (crate/html @body) 0))
 
 (defn- post-render!
   ""
@@ -111,6 +158,7 @@
 (defn- render!
   ""
   [title body]
+  (dom/log "PRE-PRE-RENDER")
   (pre-render!)
   (set-title! title)
   (update-dom! body)
@@ -121,24 +169,29 @@
   [title body]
   (add-watch body nil
              (fn [k a old-val new-val]
+               ;;(render! title body))))
                (js/setTimeout #(render! title body) 0))))
+        
 
 (defn- listen!
   "sets up top level event handlers"
-  [render-map]
+  []
   (event/listen (body-el) :input 
     (fn [ev]
       (let [target (.-target ev)
             id (.getAttribute target "id")
-            obs ((keyword id) render-map)
+            ev-fn ((keyword id) @event-map)
             val (.-value target)]
-        (when obs (reset! obs val))))
+        (when ev-fn
+          (dom/log "IN EV FN " ev-fn " with val " val)
+;;          (js/setTimeout (ev-fn val) 0))))
+          (ev-fn val))))
     true))
 
 (defn init!
-  [title body render-map]
+  [title body]
   (dom-ready!
     (fn []
       (make-watcher! title body)
-      (listen! render-map)
+      (listen!)
       (render! title body))))

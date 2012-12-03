@@ -1,6 +1,7 @@
 (ns hedgehog.todos
-  (:use-macros [hedgehog.macros :only [defo defco]])
+  (:use-macros [hedgehog.macros :only [defo defco defbody]])
   (:require
+   [clojure.browser.dom :as dom]
    ;; required so defo macro expansion is included
    [reflex.core :as reflex]
    [hedgehog.core :as hedgehog]))
@@ -16,20 +17,27 @@
 
 (defn todo-element [todo] [:li.todo todo])
 
-(defco body
+(defn update-pending-todo [val]
+  (dom/log "PEND-TODO "  @pending-todo)
+  (dom/log "PEND-TODO VAL "  val)
+  (reset! pending-todo val))
+
+(defbody body
   [:div#todos
     [:ul
       (map todo-element @todos)
       (when-not (empty? @pending-todo)
         (todo-element @pending-todo))]
-    [:input#input
-      {:value @pending-todo
-       :type "text"
-       :autofocus "true"}]
+    [:input ;;#input
+     {:value @pending-todo
+      :bind-value (do (dom/log "HI") update-pending-todo)
+      :type "text"
+      :autofocus "true"}]
    [:input {:value @pending-todo}]
    [:button "Add"]])
 
-(def render-map
-  {:input pending-todo})
+;; (def render-map {:input pending-todo})
 
-(hedgehog/init! title body render-map)
+;;(hedgehog/init! title body render-map)
+
+(hedgehog/init! title body)
