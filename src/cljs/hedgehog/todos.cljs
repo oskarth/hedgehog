@@ -1,37 +1,20 @@
 (ns hedgehog.todos
   (:use-macros [hedgehog.macros :only [defo defco]])
   (:require
-   [clojure.browser.dom :as dom]
-   [clojure.browser.event :as event]
+   ;; required so defo macro expansion is included
    [reflex.core :as reflex]
    [hedgehog.core :as hedgehog]))
-
-; defo/defe input-event xpath AND THEN when  this changes
-; STATE PROPAGATE. defco
-
-;; why do things have to change?
-;; 1) core data changes (external)
-;; 2) user interaction, ie events! (internal)
-
-;; dom as a CO
-;; whenever event happens, something should happen in dom/CO
 
 (defo todos ["buy milk" "eat lunch" "drink milk"])
 (defo pending-todo "foo bar")
 (defco first-todo (first @todos))
 (defco num-todos (count @todos))
+(defco title
+  (str "Todos" (when-not (zero? @num-todos) (str " (" @num-todos ")"))))
 
 (defn add-todo! [todo] (swap! todos conj todo))
 
 (defn todo-element [todo] [:li.todo todo])
-
-(defco title
-  (str "Todos" (when-not (zero? @num-todos) (str " (" @num-todos ")"))))
-
-;; traverse this form
-;; predicate for @form
-;; when hitting @form, make a map that
-;; defines which html el (xpath?) binds to that form
 
 (defco body
   [:div#todos
