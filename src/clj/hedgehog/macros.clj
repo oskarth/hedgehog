@@ -10,7 +10,3 @@
   "defined computed observables"
   [name expr]
   `(def ~name (computed-observable ~expr)))
-
-(defmacro defbody [name body]
-;;  (let [body# (quote body)]
-  `(defco ~name (hedgehog.core/walk-body ~body)))

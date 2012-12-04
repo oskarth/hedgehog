@@ -21,16 +21,16 @@
   (dom/log "PEND-TODO VAL "  val)
   (reset! pending-todo val))
 
-(defbody body
+(defco body
   [:div#todos
     [:ul
       (map todo-element @todos)
       (when-not (empty? @pending-todo)
         (todo-element @pending-todo))]
     [:input
-     {:bind-value update-pending-todo
-      :type "text"
-      :autofocus "true"}]
+     {:value @pending-todo
+      :bind-value update-pending-todo
+      :type "text"}]
    [:input {:value @pending-todo}]
    [:button "Add"]])
 

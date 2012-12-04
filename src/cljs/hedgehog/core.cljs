@@ -33,8 +33,9 @@
 (defn- elem-with-attr? [form]
   (and (vector? form)
        (keyword? (first form))
-       (or (map? (second form))
-           (eval-to-map? (second form)))))
+       (map? (second form))))
+       ;(or (map? (second form))
+       ;    (eval-to-map? (second form)))))
 
 ;; TODO: generalize and check if function
 (defn- bind-val? [form]
@@ -49,19 +50,21 @@
   "updates event-map with a unique id and fn,
    and returns the form with updated attribute map"
   [form]
-  (dom/log "!!!" form)
-  (let [id (or (tag-id form) (swap! id inc))
+  (let [id (or (tag-id form)
+               (:id (second form))
+               (swap! id inc))
         kwid (keyword (str id))
         fn (:bind-value (second form))]
+    (dom/log "changing id" (second form))
     ;; update event-map
     (swap! event-map assoc kwid fn)
     ;; insert id into attr map in form
     (assoc-in form [1 :id] id)))
 
 (defn walk-body [form]
+  (dom/log "WTF WALK-BODY!" (type form) form)
   (walk/postwalk
    (fn [f]
-     (dom/log (bind-val? f) f)
      (if (bind-val? f)
        (bind-value! f)
        f)) form))
@@ -148,7 +151,6 @@
   [body]
   (when @rerender?
     (gdom/removeChildren (body-el)))
-  (dom/log-obj (crate/html @body))
   (dom/insert-at (body-el)
    (crate/html @body) 0))
 
@@ -184,16 +186,17 @@
             id (.getAttribute target "id")
             ev-fn ((keyword id) @event-map)
             val (.-value target)]
-        (when ev-fn
-          (dom/log "IN EV FN " ev-fn " with val " val)
-;;          (js/setTimeout (ev-fn val) 0))))
-          (ev-fn val))))
+        (when ev-fn (ev-fn val))))
     true))
 
+(defn- bind-events! [body]
+  (swap! body walk-body))
+  
 (defn init!
   [title body]
   (dom-ready!
-    (fn []
-      (make-watcher! title body)
-      (listen!)
-      (render! title body))))
+   (fn []
+     (bind-events! body)
+     (make-watcher! title body)
+     (listen!)
+     (render! title body))))
