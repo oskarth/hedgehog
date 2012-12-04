@@ -55,7 +55,9 @@
     ;; update event-map
     (swap! event-map assoc kwid fn)
     ;; insert id into attr map in form
-    (assoc-in form [1 :id] id)))
+    (assoc-in
+     (assoc-in form [1 :bind-value] "foo");;(str fn))
+     [1 :id] id)))
 
 (defn walk-body [form]
   (walk/postwalk

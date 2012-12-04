@@ -29,7 +29,10 @@
       (when-not (empty? @pending-todo)
         (todo-element @pending-todo))]
     [:input ;;#input
-     {:value @pending-todo
+     {:value "foo"
+;;           {:value @pending-todo
+      ;; this is being evaled by crate
+      ;;:foo (do (dom/log "foo"))
       :bind-value (do (dom/log "HI") update-pending-todo)
       :type "text"
       :autofocus "true"}]
