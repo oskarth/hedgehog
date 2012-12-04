@@ -9,11 +9,7 @@
 (def window js/window)
 (defn body-el [] (.-body document))
 
-(def id (atom 0))
-(def event-map (atom {}))
-
-;; Taken from Hiccup: http://git.io/65Rf3g
-(def re-tag #"([^\s\.#]+)(?:#([^\s\.#]+))?(?:\.([^\s#]+))?")
+(def ^:dynamic !event-map (atom {}))
 
 (def dom-state (atom
   {:focus nil
@@ -27,47 +23,6 @@
 ;; event binding and traversing
 ;;--------------------------------------------------------------------
 
-(defn- eval-to-map? [form]
-  (and (fn? form) (map? (form))))
-
-(defn- elem-with-attr? [form]
-  (and (vector? form)
-       (keyword? (first form))
-       (map? (second form))))
-       ;(or (map? (second form))
-       ;    (eval-to-map? (second form)))))
-
-;; TODO: generalize and check if function
-(defn- bind-val? [form]
-  (and (elem-with-attr? form)
-       (fn? (:bind-value (second form)))))
-
-(defn- tag-id [[tag & _]]
-  "returns tag id or nil of form"
-  (nth (re-matches re-tag (name tag)) 2))
-  
-(defn- bind-value!
-  "updates event-map with a unique id and fn,
-   and returns the form with updated attribute map"
-  [form]
-  (let [id (or (tag-id form)
-               (:id (second form))
-               (swap! id inc))
-        kwid (keyword (str id))
-        fn (:bind-value (second form))]
-    (dom/log "changing id" (second form))
-    ;; update event-map
-    (swap! event-map assoc kwid fn)
-    ;; insert id into attr map in form
-    (assoc-in form [1 :id] id)))
-
-(defn walk-body [form]
-  (dom/log "WTF WALK-BODY!" (type form) form)
-  (walk/postwalk
-   (fn [f]
-     (if (bind-val? f)
-       (bind-value! f)
-       f)) form))
 
 ;; dom helpers
 ;;--------------------------------------------------------------------
@@ -171,8 +126,9 @@
 (defn- make-watcher!
   "creates a watcher for application state"
   [title body]
-  (add-watch body nil
-             (fn [k a old-val new-val]
+  (add-watch body :body-watch
+             (fn []
+               (dom/log "!!!" body)
                ;;(render! title body))))
                (js/setTimeout #(render! title body) 0))))
         
@@ -184,19 +140,16 @@
     (fn [ev]
       (let [target (.-target ev)
             id (.getAttribute target "id")
-            ev-fn ((keyword id) @event-map)
+            ev-fn ((keyword id) @!event-map)
             val (.-value target)]
         (when ev-fn (ev-fn val))))
     true))
 
-(defn- bind-events! [body]
-  (swap! body walk-body))
-  
 (defn init!
   [title body]
+  (dom/log body)
   (dom-ready!
    (fn []
-     (bind-events! body)
      (make-watcher! title body)
      (listen!)
      (render! title body))))

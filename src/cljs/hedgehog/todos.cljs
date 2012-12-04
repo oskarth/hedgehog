@@ -18,10 +18,9 @@
 (defn todo-element [todo] [:li.todo todo])
 
 (defn update-pending-todo [val]
-  (dom/log "PEND-TODO VAL "  val)
   (reset! pending-todo val))
 
-(defco body
+(defbody body
   [:div#todos
     [:ul
       (map todo-element @todos)
@@ -30,12 +29,12 @@
     [:input
      {:value @pending-todo
       :bind-value update-pending-todo
-      :type "text"}]
+      :type "text"
+      :autofocus true}]
    [:input {:value @pending-todo}]
    [:button "Add"]])
 
-;; (def render-map {:input pending-todo})
-
-;;(hedgehog/init! title body render-map)
+;; would this work?
+;; (reset! hedgehog.core/!event-map {})
 
 (hedgehog/init! title body)
