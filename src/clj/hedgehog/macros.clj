@@ -13,4 +13,4 @@
 
 (defmacro defbody [name body]
 ;;  (let [body# (quote body)]
-  `(defco ~name (hedgehog.core/walk-body (quote ~body))))
+  `(defco ~name (hedgehog.core/walk-body ~body)))

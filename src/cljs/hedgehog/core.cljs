@@ -39,7 +39,7 @@
 ;; TODO: generalize and check if function
 (defn- bind-val? [form]
   (and (elem-with-attr? form)
-       (:bind-value (second form))))
+       (fn? (:bind-value (second form)))))
 
 (defn- tag-id [[tag & _]]
   "returns tag id or nil of form"
@@ -49,19 +49,19 @@
   "updates event-map with a unique id and fn,
    and returns the form with updated attribute map"
   [form]
+  (dom/log "!!!" form)
   (let [id (or (tag-id form) (swap! id inc))
         kwid (keyword (str id))
         fn (:bind-value (second form))]
     ;; update event-map
     (swap! event-map assoc kwid fn)
     ;; insert id into attr map in form
-    (assoc-in
-     (assoc-in form [1 :bind-value] "foo");;(str fn))
-     [1 :id] id)))
+    (assoc-in form [1 :id] id)))
 
 (defn walk-body [form]
   (walk/postwalk
    (fn [f]
+     (dom/log (bind-val? f) f)
      (if (bind-val? f)
        (bind-value! f)
        f)) form))
@@ -148,6 +148,7 @@
   [body]
   (when @rerender?
     (gdom/removeChildren (body-el)))
+  (dom/log-obj (crate/html @body))
   (dom/insert-at (body-el)
    (crate/html @body) 0))
 
@@ -160,7 +161,6 @@
 (defn- render!
   ""
   [title body]
-  (dom/log "PRE-PRE-RENDER")
   (pre-render!)
   (set-title! title)
   (update-dom! body)

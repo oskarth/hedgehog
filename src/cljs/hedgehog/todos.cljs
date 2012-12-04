@@ -18,7 +18,6 @@
 (defn todo-element [todo] [:li.todo todo])
 
 (defn update-pending-todo [val]
-  (dom/log "PEND-TODO "  @pending-todo)
   (dom/log "PEND-TODO VAL "  val)
   (reset! pending-todo val))
 
@@ -28,12 +27,8 @@
       (map todo-element @todos)
       (when-not (empty? @pending-todo)
         (todo-element @pending-todo))]
-    [:input ;;#input
-     {:value "foo"
-;;           {:value @pending-todo
-      ;; this is being evaled by crate
-      ;;:foo (do (dom/log "foo"))
-      :bind-value (do (dom/log "HI") update-pending-todo)
+    [:input
+     {:bind-value update-pending-todo
       :type "text"
       :autofocus "true"}]
    [:input {:value @pending-todo}]
