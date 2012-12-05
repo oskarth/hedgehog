@@ -147,7 +147,6 @@
 
 (defn init!
   [title body]
-  (dom/log body)
   (dom-ready!
    (fn []
      (make-watcher! title body)
