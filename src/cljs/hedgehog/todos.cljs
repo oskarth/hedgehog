@@ -1,28 +1,31 @@
 (ns hedgehog.todos
-  (:use-macros [hedgehog.macros :only [defo defco defbody]
-                reflex.macros :only [computed-observable]])
   (:require
    [clojure.browser.dom :as dom]
-   ;; required so defo macro expansion is included
-   [reflex.core :as reflex]
    [hedgehog.core :as hedgehog]))
 
-(defo todos ["buy milk" "eat lunch" "drink milk"])
-(defo pending-todo "foo bar")
-(defo notification "test notification")
-(defco first-todo (first @todos))
-(defco num-todos (count @todos))
-(defco title
-  (str "Todos" (when-not (zero? @num-todos) (str " (" @num-todos ")"))))
+(def todos (atom ["buy milk" "eat lunch" "drink milk"]))
+
+(def pending-todo (atom "foo bar"))
+
+(def notification (atom "test notification"))
+
+(defn first-todo [] (first @todos))
+
+(defn num-todos [] (count @todos))
+
+(defn title-fn []
+  (let [num-todos (num-todos)]
+    (str "Todos" (when-not (zero? num-todos) (str " (" num-todos ")")))))
 
 (defn add-todo! [todo] (swap! todos conj todo))
 
 (defn update-pending-todo [val]
+  (dom/log "update-pending-todo" val)
   (reset! pending-todo val))
 
 (defn todo-element [todo]
   [:li.todo todo
-   [:input {:bind-value update-pending-todo}]])
+   [:input {:bind-value (fn [] update-pending-todo)}]])
 
 (defn submit-todo []
   (add-todo! @pending-todo)
@@ -30,31 +33,21 @@
   (reset! notification "Nice todo!")
   (js/setTimeout #(reset! notification nil) 5000))
 
-(defco todo-els (map todo-element @todos))
+(defn todo-els [] (map todo-element @todos))
 
-(defco notifications
-  (when @notification [:div @notification]))
+(defn notifications []
+  (when-let [n @notification] [:div n]))
 
-(defco test [@first-todo @first-todo @first-todo])
-
-(defco body
+(defn body-fn []
   [:div#todos
-   @notifications
-   ;[:ul @todo-els]
+   [:ul (todo-els)]
    [:input
     {:value @pending-todo
-     :bind-value update-pending-todo
+     :bind-value (fn [] update-pending-todo)
      :type "text"
-     :autofocus true}]
+     :autofocus false}]
    [:input {:value @pending-todo}]
    [:button "Add"]])
 
-(hedgehog/init! title body)
+(hedgehog/init! title-fn body-fn)
 
-
-
-(def a (atom 0))
-(def b (computed-observable @a))
-(def c (computed-observable @a))
-
-(def d (computed-observable [@c @b]))
